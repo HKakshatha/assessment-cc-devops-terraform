@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: codebase/rdicidr-0.1.0
 
   steps: 
     - name: Check out code
