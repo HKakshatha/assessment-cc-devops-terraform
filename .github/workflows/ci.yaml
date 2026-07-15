@@ -12,28 +12,28 @@ jobs:
       run:
         working-directory: codebase/rdicidr-0.1.0
 
-  steps: 
-    - name: Check out code
-    uses: actions/checkout@v3
+   steps: 
+     - name: Check out code
+       uses: actions/checkout@v3
 
-    - name: Set up Node.js
-    uses: actions/setup-node@v3
-    with:
-      node-version: '18'
+     - name: Set up Node.js
+       uses: actions/setup-node@v3
+       with:
+         node-version: '18'
 
-    - name: Install dependencies
-      run: npm install
+     - name: Install dependencies
+       run: npm install
 
-    - name: Run linter
-      run: npm run lint
+     - name: Run linter
+       run: npm run lint
 
-    - name: Run formatter
-      run: npm run prettier
+     - name: Run formatter
+       run: npm run prettier
 
-    - name: Run tests
-      env: 
-        CI: true
-      run: npm run test
-
-    - name: Build project
-      run: npm run build
+     - name: Run tests
+       env: 
+         CI: true
+       run: npm run test
+ 
+     - name: Build project
+       run: npm run build
