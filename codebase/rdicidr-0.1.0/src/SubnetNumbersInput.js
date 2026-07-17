@@ -4,7 +4,7 @@ import "./SubnetNumbersInput.css";
 const SubnetNumbersInput = (props) => {
   const [message, setMessage] = useState("");
   const [isValid, setIsValid] = useState(
-    props.value < props.maxNumberOfSubnets
+    props.value < props.maxNumberOfSubnets,
   );
 
   const validClass = isValid ? "valid" : "invalid";

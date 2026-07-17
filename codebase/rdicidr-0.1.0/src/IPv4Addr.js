@@ -37,7 +37,7 @@ const IPv4Addr = (props) => {
       netmasksElements.push(
         <div key={`networkAddress-${index}`}>
           {e.networkAddress}/{e.netmask} ({e.count} hosts)
-        </div>
+        </div>,
       );
     });
     return netmasksElements;
