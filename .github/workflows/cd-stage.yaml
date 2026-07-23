@@ -1,9 +1,9 @@
-name: CD - Deploy to Devel
+name: CD - Deploy to Stage
 
 on:
   push:
     branches:
-      - devel  # Triggers when code is merged into the devel branch
+      - stage  # Triggers when code is merged into the stage branch
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '15.5.1'
 
       # Install all npm packages listed in package.json
       - name: Install dependencies
@@ -38,22 +38,22 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.6.0
+          terraform_version: 1.9.0
 
       # Initialize Terraform — downloads provider plugins
       - name: Terraform Init
         working-directory: codebase/rdicidr-0.1.0/terraform
         run: terraform init
 
-      # Switch to the devel workspace — isolates devel state from stage
+      # Switch to the stage workspace — isolates stage state from devel
       - name: Terraform Workspace Select
         working-directory: codebase/rdicidr-0.1.0/terraform
-        run: terraform workspace select devel
+        run: terraform workspace select -or-create stage
 
       # Apply infrastructure — no-op if nothing changed, fixes drift if something did
       - name: Terraform Apply
         working-directory: codebase/rdicidr-0.1.0/terraform
-        run: terraform apply -auto-approve -var="environment=devel"
+        run: terraform apply -auto-approve -var="environment=stage"
 
       # Capture the app bucket name from Terraform output for use in next step
       - name: Get Terraform Output
@@ -63,7 +63,8 @@ jobs:
 
       # Sync React build output to S3 — --delete removes stale files
       - name: Deploy to S3
-        run: aws s3 sync codebase/rdicidr-0.1.0/build/ s3://${{ steps.tf_outputs.outputs.bucket_name }} --delete
+        working-directory: codebase/rdicidr-0.1.0
+        run: aws s3 sync build/ s3://${{ steps.tf_outputs.outputs.bucket_name }} --delete
 
       # Verify the app is live by hitting the CloudFront URL — fails if not 200
       - name: Verify CloudFront URL
