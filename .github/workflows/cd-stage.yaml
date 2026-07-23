@@ -39,6 +39,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.9.0
+          terraform_wrapper: false  # Avoids extra wrapper layer, speeds up runs
 
       # Initialize Terraform — downloads provider plugins
       - name: Terraform Init
