@@ -26,10 +26,12 @@ jobs:
 
       # Install all npm packages listed in package.json
       - name: Install dependencies
+        working-directory: codebase/rdicidr-0.1.0
         run: npm install
 
       # Build the React app — output goes to build/ folder
       - name: Build app
+        working-directory: codebase/rdicidr-0.1.0
         run: npm run build
 
       # Install Terraform on the runner at a pinned version
@@ -61,7 +63,7 @@ jobs:
 
       # Sync React build output to S3 — --delete removes stale files
       - name: Deploy to S3
-        run: aws s3 sync build/ s3://${{ steps.tf_outputs.outputs.bucket_name }} --delete
+        run: aws s3 sync codebase/rdicidr-0.1.0/build/ s3://${{ steps.tf_outputs.outputs.bucket_name }} --delete
 
       # Verify the app is live by hitting the CloudFront URL — fails if not 200
       - name: Verify CloudFront URL
