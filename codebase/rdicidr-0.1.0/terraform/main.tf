@@ -1,15 +1,20 @@
 # In this file put all the logic to create the proper infrastructure
 terraform {
-    required_providers {
-        aws = {
-            source = "hashicorp/aws"
-            version = "~> 6.0"
-        }
-        random = {
-            source = "hashicorp/random"
-            version = "~> 3.0"
-        }
+  backend "s3" {
+    bucket = "rdicidr-terraform-state-800174642443"
+    key    = "rdicidr/terraform.tfstate"
+    region = "us-east-1"
+  }
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
 }
 
 #configure the AWS provider and default region for all resources below
