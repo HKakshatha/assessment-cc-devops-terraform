@@ -48,7 +48,7 @@ jobs:
       # Switch to the stage workspace — isolates stage state from devel
       - name: Terraform Workspace Select
         working-directory: codebase/rdicidr-0.1.0/terraform
-        run: terraform workspace select stage
+        run: terraform workspace select -or-create stage
 
       # Apply infrastructure — no-op if nothing changed, fixes drift if something did
       - name: Terraform Apply
