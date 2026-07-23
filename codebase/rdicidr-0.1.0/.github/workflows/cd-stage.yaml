@@ -1,0 +1,71 @@
+name: CD - Deploy to Stage
+
+on:
+  push:
+    branches:
+      - stage  # Triggers when code is merged into the stage branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Fresh Linux VM for each run
+    env:
+      # AWS credentials from GitHub Secrets — never hardcode these
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      # Pull the repo code onto the runner
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Install Node.js so we can build the React app
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Install all npm packages listed in package.json
+      - name: Install dependencies
+        run: npm install
+
+      # Build the React app — output goes to build/ folder
+      - name: Build app
+        run: npm run build
+
+      # Install Terraform on the runner at a pinned version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      # Initialize Terraform — downloads provider plugins
+      - name: Terraform Init
+        working-directory: codebase/rdicidr-0.1.0/terraform
+        run: terraform init
+
+      # Switch to the stage workspace — isolates stage state from devel
+      - name: Terraform Workspace Select
+        working-directory: codebase/rdicidr-0.1.0/terraform
+        run: terraform workspace select stage
+
+      # Apply infrastructure — no-op if nothing changed, fixes drift if something did
+      - name: Terraform Apply
+        working-directory: codebase/rdicidr-0.1.0/terraform
+        run: terraform apply -auto-approve -var="environment=stage"
+
+      # Capture the app bucket name from Terraform output for use in next step
+      - name: Get Terraform Output
+        working-directory: codebase/rdicidr-0.1.0/terraform
+        id: tf_outputs
+        run: echo "bucket_name=$(terraform output -raw app_bucket_name)" >> $GITHUB_OUTPUT
+
+      # Sync React build output to S3 — --delete removes stale files
+      - name: Deploy to S3
+        run: aws s3 sync build/ s3://${{ steps.tf_outputs.outputs.bucket_name }} --delete
+
+      # Verify the app is live by hitting the CloudFront URL — fails if not 200
+      - name: Verify CloudFront URL
+        working-directory: codebase/rdicidr-0.1.0/terraform
+        run: |
+          URL=$(terraform output -raw cloudfront_domain_name)
+          curl --fail https://$URL
